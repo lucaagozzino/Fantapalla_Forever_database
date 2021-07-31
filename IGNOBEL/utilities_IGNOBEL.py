@@ -329,7 +329,8 @@ def aggiorna_database(giornata):
 import time
 
 def scarica_stats(stagione ='2020-21'):
-    driver.get('https://www.fantacalcio.it/statistiche-serie-a')
+    link='https://www.fantacalcio.it/statistiche-serie-a/'+stagione+'/fantacalcio/medie'
+    driver.get(link)
     button = driver.find_element_by_id("toexcel")
     driver.execute_script("arguments[0].click();", button)
     time.sleep(5)
@@ -475,11 +476,30 @@ def personal_info(Id, database):
     return classe, eta, full_name[5:], nationality[12:]
 
 
+#def info_missing_players(collection, database):
+#    missing_ids = find_missing_players(collection, database)
+#    all_pl = []
+#    for idx in progressbar.progressbar(missing_ids):
+#        infos = personal_info(idx, database)
+#        dic = {}
+#        dic['Id'] = idx
+#        dic['Classe'] = infos[0]
+#        dic['Eta\''] = infos[1]
+#        dic['Nome Completo'] = infos[2]
+#        dic['Nazionalita\''] = infos[3]
+#        all_pl.append(dic)
+#    return pd.DataFrame(all_pl, index = missing_ids)
+
 def info_missing_players(collection, database):
     missing_ids = find_missing_players(collection, database)
     all_pl = []
-    for idx in missing_ids:
-        infos = personal_info(idx, database)
+    for k in progressbar.progressbar(range(len(missing_ids))):
+        idx = missing_ids[k]
+        try:
+            infos = personal_info(idx, database)
+        except:
+            k = k-1
+            continue
         dic = {}
         dic['Id'] = idx
         dic['Classe'] = infos[0]
