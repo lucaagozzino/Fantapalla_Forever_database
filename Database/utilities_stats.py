@@ -4,8 +4,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from IPython.display import display, HTML
 from matplotlib.patches import Patch
+from pymongo import MongoClient
+from pprint import pprint
+import pymongo
+import json
+with open('credential.json','r') as f:
+    cred = json.load(f)
 
-from crea_df import storico_individuale
+#from crea_df import storico_individuale
 from matplotlib.offsetbox import OffsetImage,AnnotationBbox
 
 from matplotlib import rcParams
@@ -26,15 +32,20 @@ rcParams['xtick.labelsize'] = 14
 rcParams['ytick.labelsize'] = 14
 rcParams['legend.fontsize'] = 12
 rcParams['figure.titlesize'] = 18
+current_season = '2020-21'
 
 import os
 
 # Stabilisci ultima giornata valida
-def current_matchday():
-    giornate = len(next(os.walk('../IGNOBEL/Dati_storici/'))[2])
+def current_matchday(season=current_season):
+    cluster = MongoClient(cred['cred'])
+    db = cluster['Game']
+    coll_res = db['Results']
+    #giornate = len(next(os.walk('../IGNOBEL/Dati_storici/'))[2])
+    giornate = len(list(coll_res.find({'season':current_season})))
     return giornate
     
-def storico_IG(giornata, dict_names, path = "../IGNOBEL/Dati_storici/"):
+"""def storico_IG(giornata, dict_names, path = "../IGNOBEL/Dati_storici/"):
 
     test_dict={
         'enzo':{0:['gg','pf','ps','gs','c','pan','mod','inf','nome']},
@@ -49,7 +60,33 @@ def storico_IG(giornata, dict_names, path = "../IGNOBEL/Dati_storici/"):
         G=pd.read_pickle(path+"Giornata_"+str(i)+".pkl")
         for team, content in G.items():
             test_dict[dict_names[team]][i] = [i, content[0], float(content[1]), content[2], content[3]+2*content[4], content[5], content[6], content[7], dict_names[team]]
+    return(test_dict)"""
+
+def storico_IG_mongo(giornata, dict_names, season = current_season):
+    cluster = MongoClient(cred['cred'])
+    db = cluster['Game']
+    coll_res = db['Results']
+
+    test_dict={
+        'enzo':{0:['gg','pf','ps','gs','c','pan','mod','inf','nome']},
+        'pietro':{0:['gg','pf','ps','gs','c','pan','mod','inf','nome']},
+        'mario':{0:['gg','pf','ps','gs','c','pan','mod','inf','nome']},
+        'musci8':{0:['gg','pf','ps','gs','c','pan','mod','inf','nome']},
+        'franky':{0:['gg','pf','ps','gs','c','pan','mod','inf','nome']},
+        'nanni':{0:['gg','pf','ps','gs','c','pan','mod','inf','nome']},
+        'emiliano':{0:['gg','pf','ps','gs','c','pan','mod','inf','nome']},
+        'luca':{0:['gg','pf','ps','gs','c','pan','mod','inf','nome']}}
+    for i in range(1,giornata+1):
+        #G=pd.read_pickle(path+"Giornata_"+str(i)+".pkl")
+        
+        post = coll_res.find_one({'season':season,'matchday':i})
+        G = pd.DataFrame(post['results'])
+        
+        for team, content in G.items():
+            test_dict[dict_names[team]][i] = [i, content[0], float(content[1]), content[2], content[3]+2*content[4], content[5], content[6], content[7], dict_names[team]]
     return(test_dict)
+
+
 
 def storico_individuale(nome, giornata):
     dict_names={
@@ -63,7 +100,8 @@ def storico_individuale(nome, giornata):
     'XYZ': 'luca'
     }
 
-    test_dict = storico_IG(giornata, dict_names)
+    test_dict = storico_IG_mongo(giornata, dict_names)
+    #test_dict = storico_IG(giornata, dict_names)
     
     df = pd.DataFrame(data=test_dict[nome]).T
     new_header = df.iloc[0] #grab the first row for the header
