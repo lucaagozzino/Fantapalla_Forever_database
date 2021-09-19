@@ -109,7 +109,7 @@ def check_exists_by_xpath(xpath):
 #    return players
 
 def infortunati(giornata):
-    link = 'https://www.fantacalcio.it/cartella-medica/'+str(giornata+3)#adjusted for our start of the season
+    link = 'https://www.fantacalcio.it/cartella-medica/'+str(giornata)
     driver.get(link)
     button = driver.find_element_by_id("tabAll")
 
@@ -130,8 +130,8 @@ def rose(link = 'https://leghe.fantacalcio.it/fantapalla-forever/area-gioco/rose
 
     for j in range(1,9):
         test_1 = []
-        name = (driver.find_element_by_xpath('/html/body/div[7]/main/div[3]/div[2]/div[1]/div[2]/div[2]/ul/li['+str(j)+']/div/div[1]/div[2]/h4').text).upper()
-        players = driver.find_elements_by_xpath('/html/body/div[7]/main/div[3]/div[2]/div[1]/div[2]/div[2]/ul/li['+str(j)+']/table/tbody/tr[@class]/td[2]/a/b')
+        name = (driver.find_element_by_xpath('/html/body/div[8]/main/div[3]/div[2]/div[1]/div[2]/div[2]/ul/li['+str(j)+']/div/div[1]/div[2]/h4').text).upper()
+        players = driver.find_elements_by_xpath('/html/body/div[8]/main/div[3]/div[2]/div[1]/div[2]/div[2]/ul/li['+str(j)+']/table/tbody/tr[@class]/td[2]/a/b')
         for pl in players:
             test_1.append((pl.text).upper())
 
@@ -155,18 +155,18 @@ def count_inf(I , R ):
     return pd.DataFrame(data = count, index = ['tot Infortunati'])
 
 def bonus_panchina(giornata):
-    link = 'https://leghe.fantacalcio.it/fantapalla-forever/formazioni/'+str(giornata)
+    link = 'https://leghe.fantacalcio.it/fantapalla-forever/formazioni/'+str(giornata)+'?id=11194'
     driver.get(link)
 
     all_voti = {}
     for l in [2,3,4,5]:
         for k in [1,2]:
-            name = driver.find_element_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text.upper()
+            name = driver.find_element_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text.upper()
             #name = driver.find_element_by_xpath("/html/body/div[12]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text
-            Fvoto_o = driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class = 'player-list-item odd  ']/td[5]/span")
-            Nvoto_o = driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class = 'player-list-item odd  ']/td[4]/span")
-            Fvoto_e = driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class = 'player-list-item even  ']/td[5]/span")
-            Nvoto_e = driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class = 'player-list-item even  ']/td[4]/span")
+            Fvoto_o = driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class = 'player-list-item odd  ']/td[5]/span")
+            Nvoto_o = driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class = 'player-list-item odd  ']/td[4]/span")
+            Fvoto_e = driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class = 'player-list-item even  ']/td[5]/span")
+            Nvoto_e = driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class = 'player-list-item even  ']/td[4]/span")
             Fvoti = Fvoto_o + Fvoto_e
             Nvoti = Nvoto_o + Nvoto_e
             tot = []
@@ -178,19 +178,19 @@ def bonus_panchina(giornata):
 
 
 def goal_subiti(giornata):
-    link = 'https://leghe.fantacalcio.it/fantapalla-forever/formazioni/'+str(giornata)
+    link = 'https://leghe.fantacalcio.it/fantapalla-forever/formazioni/'+str(giornata)+'?id=11194'
     driver.get(link)
 
     all_goal = {}
     for l in [2,3,4,5]:
         for k in [1,2]:
-            name = driver.find_element_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text.upper()
-            if len(driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[1]/tbody/tr[@class='player-list-item even  out']/td[@class='cell-text cell-primary x7 smart-x9 smart-role role-p']")) == 0:
+            name = driver.find_element_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text.upper()
+            if len(driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[1]/tbody/tr[@class='player-list-item even  out']/td[@class='cell-text cell-primary x7 smart-x9 smart-role role-p']")) == 0:
 
-                goal = len(driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[1]/tbody/tr[1]/td[3]/ul/li[@data-original-title='Gol subito (-0.5)']"))
+                goal = len(driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[1]/tbody/tr[1]/td[3]/ul/li[@data-original-title='Gol subito (-0.5)']"))
             else:
-                goal1 = len(driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class='player-list-item even in ']/td[3]/ul/li[@data-original-title='Gol subito (-0.5)']"))
-                goal2 = len(driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class='player-list-item odd in ']/td[3]/ul/li[@data-original-title='Gol subito (-0.5)']"))
+                goal1 = len(driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class='player-list-item even in ']/td[3]/ul/li[@data-original-title='Gol subito (-0.5)']"))
+                goal2 = len(driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class='player-list-item odd in ']/td[3]/ul/li[@data-original-title='Gol subito (-0.5)']"))
                 goal = max(goal1,goal2)
             all_goal[name] = goal
 
@@ -198,22 +198,22 @@ def goal_subiti(giornata):
 
 
 def modificatore(giornata):
-    link = 'https://leghe.fantacalcio.it/fantapalla-forever/formazioni/'+str(giornata)
+    link = 'https://leghe.fantacalcio.it/fantapalla-forever/formazioni/'+str(giornata)+'?id=11194'
     driver.get(link)
 
     all_mod = {}
     for l in [2,3,4,5]:
         for k in [1,2]:
-            name = driver.find_element_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text.upper()
+            name = driver.find_element_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text.upper()
             all_mod[name] = 0
-            temp = driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[3]/tbody/tr/td[1]/span")
+            temp = driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[3]/tbody/tr/td[1]/span")
             if len(temp)>0 and temp[0].text == 'Modificatore Difesa':
-                mod = float(driver.find_element_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[3]/tbody/tr/td[2]/span").text)
+                mod = float(driver.find_element_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[3]/tbody/tr/td[2]/span").text)
                 all_mod[name] = float(mod)
     return pd.DataFrame(data=all_mod, index = ['Modificatore'])
 
 
-def scarica_voti(giornata, stagione ='2020-21'):
+def scarica_voti(giornata, stagione):
     data = pd.read_excel('http://www.fantacalcio.it/Servizi/Excel.ashx?type=1&g='+str(giornata)+'&t=1601872625000&s='+stagione,skiprows = [0,1,2,3,4])
     data = data[data.Nome != 'Nome']
     data = data.dropna()
@@ -221,24 +221,24 @@ def scarica_voti(giornata, stagione ='2020-21'):
     return data
 
 def cartellini(giornata):
-    link = 'https://leghe.fantacalcio.it/fantapalla-forever/formazioni/'+str(giornata)
+    link = 'https://leghe.fantacalcio.it/fantapalla-forever/formazioni/'+str(giornata)+'?id=11194'
     driver.get(link)
 
     all_cart = {}
     for l in [2,3,4,5]:
         for k in [1,2]:
-            name = driver.find_element_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text.upper()
-            gialli = len(driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[1]/tbody/tr[@data-id]/td[3]/ul/li[@data-original-title='Ammonizione (-0.25)']"))
-            gialliPE= len(driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class='player-list-item even in ']/td[3]/ul/li[@data-original-title='Ammonizione (-0.25)']"))
-            gialliPO= len(driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class='player-list-item odd in ']/td[3]/ul/li[@data-original-title='Ammonizione (-0.25)']"))
-            rossi =  len(driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[1]/tbody/tr[@data-id]/td[3]/ul/li[@data-original-title='Espulso (-0.5)']"))
-            rossiPE=len(driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class='player-list-item even in ']/td[3]/ul/li[@data-original-title='Espulso (-0.5)']"))
-            rossiPO=len(driver.find_elements_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class='player-list-item odd in ']/td[3]/ul/li[@data-original-title='Espulso (-0.5)']"))
+            name = driver.find_element_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text.upper()
+            gialli = len(driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[1]/tbody/tr[@data-id]/td[3]/ul/li[@data-original-title='Ammonizione (-0.25)']"))
+            gialliPE= len(driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class='player-list-item even in ']/td[3]/ul/li[@data-original-title='Ammonizione (-0.25)']"))
+            gialliPO= len(driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class='player-list-item odd in ']/td[3]/ul/li[@data-original-title='Ammonizione (-0.25)']"))
+            rossi =  len(driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[1]/tbody/tr[@data-id]/td[3]/ul/li[@data-original-title='Espulso (-0.5)']"))
+            rossiPE=len(driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class='player-list-item even in ']/td[3]/ul/li[@data-original-title='Espulso (-0.5)']"))
+            rossiPO=len(driver.find_elements_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[2]/tbody/tr[@class='player-list-item odd in ']/td[3]/ul/li[@data-original-title='Espulso (-0.5)']"))
             all_cart[name] = [gialli+gialliPE+gialliPO, rossi]
     return pd.DataFrame(data=all_cart,index = ['C. gialli','C. rossi'])
 
 def fantapunti_subiti(giornata):
-    link = 'https://leghe.fantacalcio.it/fantapalla-forever/formazioni/'+str(giornata)
+    link = 'https://leghe.fantacalcio.it/fantapalla-forever/formazioni/'+str(giornata)+'?id=11194'
     driver.get(link)
 
     all_punti = {}
@@ -246,15 +246,15 @@ def fantapunti_subiti(giornata):
         name={}
         punti={}
         for k in [1,2]:
-            name[k] = driver.find_element_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text.upper()
-            punti[k] = driver.find_element_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[4]/tfoot/tr/td[2]/div").text[:-7]
+            name[k] = driver.find_element_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text.upper()
+            punti[k] = driver.find_element_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[4]/tfoot/tr/td[2]/div").text[:-7]
         all_punti[name[1]]=float(punti[2])
         all_punti[name[2]]=float(punti[1])
             
     return pd.DataFrame(data=all_punti,index = ['Fantapunti Subiti'])  
 
 def fantapunti_fatti(giornata):
-    link = 'https://leghe.fantacalcio.it/fantapalla-forever/formazioni/'+str(giornata)
+    link = 'https://leghe.fantacalcio.it/fantapalla-forever/formazioni/'+str(giornata)+'?id=11194'
     driver.get(link)
 
     all_punti = {}
@@ -262,8 +262,8 @@ def fantapunti_fatti(giornata):
         name={}
         punti={}
         for k in [1,2]:
-            name[k] = driver.find_element_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text.upper()
-            punti[k] = driver.find_element_by_xpath("/html/body/div[7]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[4]/tfoot/tr/td[2]/div").text[:-7]
+            name[k] = driver.find_element_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[1]/div["+str(k)+"]/div/div[2]/h4").text.upper()
+            punti[k] = driver.find_element_by_xpath("/html/body/div[8]/main/div[3]/div[2]/div[1]/div[1]/div/div[2]/div["+str(l)+"]/div[2]/div["+str(k)+"]/table[4]/tfoot/tr/td[2]/div").text[:-7]
         all_punti[name[1]]=float(punti[1])
         all_punti[name[2]]=float(punti[2])
             
@@ -274,12 +274,16 @@ def IGNOBEL_tot(giornata):
     G = goal_subiti(giornata)
     M = modificatore(giornata) 
     C = cartellini(giornata)
-    CI = count_inf(infortunati(giornata), rose())
+    while True:
+        I=infortunati(giornata)
+        if len(I)>0:
+            break
+    CI = count_inf(I, rose())
     F = fantapunti_fatti(giornata)
     S = fantapunti_subiti(giornata)
-    output = pd.concat([F,S,G,C,V,M,CI], axis = 0).T
+    output = pd.concat([F,S,G,C,V,M,CI], axis = 0)
     #output = pd.concat([F,S,G,C,V,M], axis = 0).T
-    return output.T
+    return output
 
 def storico_IG(giornata, dict_names, path = "Dati_storici/"):
 
@@ -328,7 +332,7 @@ def aggiorna_database(giornata):
     
 import time
 
-def scarica_stats(stagione ='2020-21'):
+def scarica_stats(stagione):
     link='https://www.fantacalcio.it/statistiche-serie-a/'+stagione+'/fantacalcio/medie'
     driver.get(link)
     button = driver.find_element_by_id("toexcel")
@@ -345,7 +349,7 @@ def scarica_stats(stagione ='2020-21'):
     
     return data
 
-def scarica_quot(stagione ='2020-21'):
+def scarica_quot(stagione):
     driver.get('https://www.fantacalcio.it/quotazioni-fantacalcio')
     button = driver.find_element_by_id("toexcel")
     driver.execute_script("arguments[0].click();", button)
@@ -411,7 +415,7 @@ def rose_MDB():
 
 
 
-def stats_by_team_NO_INFO(stagione ='2020-21', dic = dict_names, primavera = False):
+def stats_by_team_NO_INFO(stagione, dic = dict_names, primavera = False):
     if primavera:
         Rose = rose_MDB() 
     else:

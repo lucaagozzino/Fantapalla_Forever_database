@@ -8,6 +8,9 @@ from pymongo import MongoClient
 from pprint import pprint
 import pymongo
 import json
+
+import glob
+
 with open('credential.json','r') as f:
     cred = json.load(f)
 
@@ -32,7 +35,7 @@ rcParams['xtick.labelsize'] = 14
 rcParams['ytick.labelsize'] = 14
 rcParams['legend.fontsize'] = 12
 rcParams['figure.titlesize'] = 18
-current_season = '2020-21'
+current_season = '2021-22'
 
 import os
 
@@ -42,6 +45,7 @@ def current_matchday(season=current_season):
     db = cluster['Game']
     coll_res = db['Results']
     #giornate = len(next(os.walk('../IGNOBEL/Dati_storici/'))[2])
+    #giornate = len(glob.glob('../IGNOBEL/Dati_storici/*.pkl'))
     giornate = len(list(coll_res.find({'season':current_season})))
     return giornate
     
@@ -224,6 +228,9 @@ def fattore_distacco(Total):
 #############################################################
 def make_calendar_array(data_path = '../IGNOBEL/Dati_storici/'):
     giornate = current_matchday()
+    cluster = MongoClient(cred['cred'])
+    db = cluster['Game']
+    coll_res = db['Results']
     # dictionary converting team names into owner names
     team2owners = {
         'XYZ': 'luca',
@@ -241,7 +248,8 @@ def make_calendar_array(data_path = '../IGNOBEL/Dati_storici/'):
     # Rimepi array calendar con dictionary accoppiamento per ogni owner
     for giornata in range(1,giornate+1):
         # read Dati storici
-        df = pd.read_pickle(data_path + 'Giornata_%d.pkl' % giornata)
+        #df = pd.read_pickle(data_path + 'Giornata_%d.pkl' % giornata)
+        df = pd.DataFrame(coll_res.find_one({'season':'2021-22','matchday':giornata})['results'])
         teams = df.columns
         # accoppia teams
         for i, team in enumerate(teams):
