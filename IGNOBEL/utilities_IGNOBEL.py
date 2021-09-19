@@ -20,7 +20,7 @@ import pymongo
 
 from webdriver_manager.chrome import ChromeDriverManager
 import json
-with open('credential.json','r') as f:
+with open('../../credential.json','r') as f:
     cred = json.load(f)
     
 
