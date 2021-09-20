@@ -11,7 +11,7 @@ import json
 
 import glob
 
-with open('credential.json','r') as f:
+with open('../../credential.json','r') as f:
     cred = json.load(f)
 
 #from crea_df import storico_individuale
