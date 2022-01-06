@@ -425,7 +425,7 @@ def stats_by_team_NO_INFO(stagione, dic = dict_names, primavera = False):
     
     stats.index = nomi
     
-    quot = scarica_quot()
+    quot = scarica_quot(stagione)
     nomi_Q = list(quot.Nome)
     quot.index = nomi_Q
     ids = list(quot.Id)
