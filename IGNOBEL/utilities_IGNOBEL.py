@@ -6,6 +6,7 @@ import pandas as pd
 from selenium.common.exceptions import NoSuchElementException   
 import progressbar
 
+from pymongo import UpdateOne
 
 import pickle
 import os.path
@@ -17,10 +18,11 @@ from pymongo import MongoClient
 from pprint import pprint
 import pymongo
 
+import datetime
 
 from webdriver_manager.chrome import ChromeDriverManager
 import json
-with open('../../credential.json','r') as f:
+with open('credential.json','r') as f:
     cred = json.load(f)
     
 
@@ -43,7 +45,7 @@ collection_tr_temp = db['tempTransfers']
 options = Options()
 options.headless = True
 options.add_argument("--window-size=1920,10200") #this is important, to tell it how much of the webpage to import
-driver = webdriver.Chrome(options=options, executable_path=r'/usr/local/bin/chromedriver')
+driver = webdriver.Chrome(options=options, executable_path=r'/home/luca/chromedriver')
 
 dict_names={
     'AS 800A': 'enzo',
@@ -269,21 +271,7 @@ def fantapunti_fatti(giornata):
             
     return pd.DataFrame(data=all_punti,index = ['Fantapunti Fatti'])
 
-def IGNOBEL_tot(giornata):
-    V = bonus_panchina(giornata) 
-    G = goal_subiti(giornata)
-    M = modificatore(giornata) 
-    C = cartellini(giornata)
-    while True:
-        I=infortunati(giornata)
-        if len(I)>0:
-            break
-    CI = count_inf(I, rose())
-    F = fantapunti_fatti(giornata)
-    S = fantapunti_subiti(giornata)
-    output = pd.concat([F,S,G,C,V,M,CI], axis = 0)
-    #output = pd.concat([F,S,G,C,V,M], axis = 0).T
-    return output
+
 
 def storico_IG(giornata, dict_names, path = "Dati_storici/"):
 
@@ -494,8 +482,7 @@ def personal_info(Id, database):
 #        all_pl.append(dic)
 #    return pd.DataFrame(all_pl, index = missing_ids)
 
-def info_missing_players(collection, database):
-    missing_ids = find_missing_players(collection, database)
+def info_missing_players(missing_ids, database):
     all_pl = []
     for k in progressbar.progressbar(range(len(missing_ids))):
         idx = missing_ids[k]
@@ -503,6 +490,7 @@ def info_missing_players(collection, database):
             infos = personal_info(idx, database)
         except:
             k = k-1
+            #print(str(missing_ids[k])+' not updated')
             continue
         dic = {}
         dic['Id'] = idx
@@ -512,3 +500,245 @@ def info_missing_players(collection, database):
         dic['Nazionalita\''] = infos[3]
         all_pl.append(dic)
     return pd.DataFrame(all_pl, index = missing_ids)
+
+def bulk_update_stats(season, primavera, db, verbose=False):
+    ST_INFO = stats_by_team_NO_INFO(stagione = season,primavera = primavera)
+    ST_INFO.rename(columns = {'Qt. A': 'Qt_A','Qt. I': 'Qt_I'}, inplace=True)
+    ST_INFO=ST_INFO.drop(columns='Diff.')
+
+    missing_ids=[]
+    stats=ST_INFO
+    ids=list(pd.DataFrame(db.Players.find())._id)
+    requests=[]
+
+    for idx in stats.Id:
+        if idx in ids: 
+            requests.append(UpdateOne({'_id':idx},{'$set':{'info.stats':dict(stats[stats['Id'] == int(idx)].T[idx][4:20])}}) )
+        else:
+            missing_ids.append(idx)
+
+    db.Players.bulk_write(requests)
+    if verbose:
+        print('Stats updated successfully!')
+        if len(missing_ids):
+            print('Missing players ids (check var missing_ids):')
+        else:
+            print('No missing players')
+    return missing_ids, ST_INFO
+
+def df_to_dict(df):
+    as_list=df.index.tolist()
+    idxG = as_list.index('C. gialli')
+    idxR = as_list.index('C. rossi')
+    as_list[idxG] = 'C_gialli'
+    as_list[idxR] = 'C_rossi'
+    df.index=as_list
+    temp = dict(df)
+    temp_2 = {}
+    for key, element in temp.items():
+        temp_2[key] = dict(element)
+    return temp_2
+
+def get_matchday_dict(k):
+    files = glob.glob('Dati_storici/*.pkl')
+    dict_matchday={}
+    for file in files:
+        num = re.findall('_\d+.',file)[0][1:-1] 
+        dict_matchday[int(num)]=file
+    df=pd.read_pickle(dict_matchday[k])
+    return df_to_dict(df)
+
+def create_results_post(season, matchday, df, post_to_mongo=False):
+    idx=season+'_G'+f'{matchday:02}'
+    post = {'_id': idx,
+     'matchday':matchday,
+     'season':season,
+     'results': df_to_dict(df)
+    }
+    if post_to_mongo:
+        coll_res = db['Results']
+        if len(list(coll_res.find({'_id': idx})))>0:
+            coll_res.delete_one({'_id': idx})
+        coll_res.insert_one(post)
+        print('Results added to MongoDB')
+    else:    
+        return post
+    
+def iterate_query(function, matchday, rose = False):
+    if rose is not False:
+        check = True
+        k=1
+        while check:
+            try:
+                OUT = function(infortunati(matchday), rose)
+                if OUT.sum().sum()==0:
+                    continue
+                check = False
+                #print(V)
+            except:
+                print('repeats: %d'%(k), end = "\r")
+                k+=1
+                continue
+    else:
+        check = True
+        k=1
+        while check:
+            try:
+                OUT = function(matchday) 
+                check = False
+                #print(V)
+            except:
+                print('repeats: %d'%(k), end = "\r")
+                k+=1
+                continue
+    return OUT
+
+def IGNOBEL_tot(giornata, rose):
+    V=iterate_query(bonus_panchina,giornata)
+    G= iterate_query(goal_subiti,giornata)
+    M = iterate_query(modificatore,giornata)
+    C = iterate_query(cartellini,giornata)
+    CI = iterate_query(count_inf,giornata,rose)
+    F = iterate_query(fantapunti_fatti,giornata)
+    S = iterate_query(fantapunti_subiti,giornata)
+
+    output = pd.concat([F,S,G,C,V,M,CI], axis = 0).T 
+    return output.T
+
+def df_to_dict(df):
+    as_list=df.index.tolist()
+    idxG = as_list.index('C. gialli')
+    idxR = as_list.index('C. rossi')
+    as_list[idxG] = 'C_gialli'
+    as_list[idxR] = 'C_rossi'
+    df.index=as_list
+    temp = dict(df)
+    temp_2 = {}
+    for key, element in temp.items():
+        temp_2[key] = dict(element)
+    return temp_2
+
+def get_matchday_dict(k):
+    files = glob.glob('Dati_storici/*.pkl')
+    dict_matchday={}
+    for file in files:
+        num = re.findall('_\d+.',file)[0][1:-1] 
+        dict_matchday[int(num)]=file
+    df=pd.read_pickle(dict_matchday[k])
+    return df_to_dict(df)
+
+def create_results_post(season, matchday, df, post_to_mongo=False):
+    idx=season+'_G'+f'{matchday:02}'
+    post = {'_id': idx,
+     'matchday':matchday,
+     'season':season,
+     'results': df_to_dict(df)
+    }
+    if post_to_mongo:
+        coll_res = db['Results']
+        if len(list(coll_res.find({'_id': idx})))>0:
+            coll_res.delete_one({'_id': idx})
+        coll_res.insert_one(post)
+        print('Results added to MongoDB')
+    else:    
+        return post
+    
+def add_player(Id, stats, missing_pl, CR = cred['cred'], DB = 'Game', CO = 'Players'):
+    '''adds the player with the given id to the database, so it would give error if the player is already there
+    
+    '''
+    # Dictionary with player current team and loan info
+    CurrentTeamDict = {
+        'owner': None, #luca, pietro etc
+        'squad': None, # 'Main' or 'Primavera'
+        'start_date': datetime.date.today().strftime('%Y/%m/%d'),
+        'previous_team': None, #last team (e.g. owner, squad)
+        'quotation_initial': 0,
+        'on_loan': False, #True or False
+        'loan_info': None
+    }
+
+    # Dictionary with player ownership info
+    ContractDict = {
+        'owner': None, #this seems redundant
+        'start_date': datetime.date.today().strftime('%Y/%m/%d'),
+        'cost': 0,
+        'acquisition_mode': None, #asta_svincolati, draft, acquisto
+        'previous_owner': None, #owner or None
+        'quotation_initial': 0
+    }
+
+    # Dictionary with player personal info
+    PersonalInfoDict = {
+        'full_name': '',
+        'birthdate': '01/01/1970',
+        'birthdate_num':0,
+        'nation': '',
+        'team_real': '',
+        'FC_role': ''
+    }
+
+    # Nested dictionary for a single player info
+    PlayerDict = {
+        '_id': 0,
+        'name': '',
+        'info':{'personal_info': PersonalInfoDict,
+        'contract': ContractDict,
+        'current_team': CurrentTeamDict}
+    }
+    transStat = stats.T
+    transMissing_pl = missing_pl.T
+    PlayerDict['_id'] = Id
+    PlayerDict['name'] = transStat[Id]['Nome']
+    PlayerDict['info']['personal_info']['FC_role'] = transStat[Id]['R']
+    PlayerDict['info']['personal_info']['team_real'] = transStat[Id]['Squadra']
+    PlayerDict['info']['personal_info']['full_name'] = transMissing_pl[Id]['Nome Completo']
+    PlayerDict['info']['personal_info']['nation'] = transMissing_pl[Id]['Nazionalita\'']
+    PlayerDict['info']['personal_info']['birthdate'] = transMissing_pl[Id]['Classe']
+    birthdate_num = int(datetime.datetime.strptime(transMissing_pl[Id]['Classe'],'%d/%m/%Y').strftime('%Y%m%d'))
+    PlayerDict['info']['personal_info']['birthdate_num'] = birthdate_num
+    PlayerDict['info']['contract']['quotation_initial'] = transStat[Id]['Qt_I']
+    PlayerDict['info']['contract']['owner'] = None
+    PlayerDict['info']['current_team']['owner'] = None
+    PlayerDict['info']['current_team']['quotation_initial'] = transStat[Id]['Qt_I'] 
+    temp = dict(transStat[Id][4:20])
+    #temp['Qt_I'] = temp.pop('Qt. I')
+    #temp['Qt_A'] = temp.pop('Qt. A')
+    PlayerDict['info']['stats'] = temp
+    
+    cluster = MongoClient(CR)
+    db = cluster[DB]
+    collection = db[CO]
+    
+    
+    collection.insert_one(PlayerDict)
+    
+    return PlayerDict
+
+def add_multi_pl(Ids, stats, missing_pl, CR = cred['cred'], DB = 'Game', CO = 'Players'):
+    '''adds all the players in the list of Ids to our database'''
+    pls = []
+    for Id in Ids:
+        pl = add_player(Id, stats, missing_pl, CR, DB, CO)
+        pls.append(pl['name'])
+    return pls
+
+def bulk_update_personal_info(collection, stats):
+    posts = collection.find()
+    list_update = []
+    for post in posts:
+        idx = post['_id']
+        name = post['name']
+        team = post['info']['personal_info']['team_real']
+
+        if idx in stats.Id:
+            name_new = stats[stats.Id == idx].Nome.iloc[0]
+            team_new = stats[stats.Id == idx].Squadra.iloc[0]
+        else:
+            name_new = name
+            team_new = None
+
+        if name_new != name or team_new != team:
+            list_update.append(idx)
+            collection.update_one({'_id': idx},{'$set':{'name':name_new,'info.personal_info.team_real':team_new}})
+    return list_update
